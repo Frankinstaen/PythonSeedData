@@ -66,11 +66,10 @@ class Login_dates(Base):
 
 class Сontracts(Base):
     __tablename__ = "contracts"
+    contracts_id = sa.Column(Integer, primary_key=True, autoincrement=True)
     user_id = sa.Column(Text(36),
                         ForeignKey("personal.user_id"),
-                        default=lambda: str(uuid.uuid4()),
-                        primary_key=True,
-                        autoincrement=False)
+                        default=lambda: str(uuid.uuid4()), unique=True)
     date_from = sa.Column(Date)
     date_to = sa.Column(Date)
 
