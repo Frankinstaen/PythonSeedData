@@ -1,6 +1,8 @@
 from __future__ import annotations
 import uuid
 from typing import List
+
+import pyodbc
 from sqlalchemy import ForeignKey, String
 import sqlalchemy as sa
 from sqlalchemy.orm import declarative_base
@@ -12,15 +14,25 @@ import pandas as pd
 
 Base = declarative_base()
 
-Server = 'HOME-PC\SQLEXPRESS'
-Database = 'our_organization'
-Driver = 'ODBC Driver 17 for SQL Server'
-Database_con = f'mssql://@{Server}/{Database}?driver={Driver}'
+# Server = 'HOME-PC\SQLEXPRESS'
+# Database = 'our_organization'
+# Driver = 'ODBC Driver 17 for SQL Server'
+# Database_con = f'mssql://@{Server}/{Database}?driver={Driver}'
+
+# server='WIN-NLAMS2TV4QH'
+server = 'HOME-PC\SQLEXPRESS'
+database='our_organization'
+username='sa'
+password='Qq12345678'
+
+conn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password
+cnxn = pyodbc.connect(conn_str)
+engine = create_engine("mssql+pyodbc:///?odbc_connect={}".format(conn_str))
 
 class Departments(Base):
     __tablename__ = "departments"
-    id = sa.Column(Integer, primary_key=True, autoincrement=False)
-    department = sa.Column(String)
+    id = sa.Column(Integer, primary_key=True, autoincrement=False, nullable=False)
+    department = sa.Column(String, nullable=False)
     personals = relationship(List["Personal"], back_populates="departments")
 
 
@@ -28,11 +40,10 @@ class Pc(Base):
     __tablename__ = "pc"
     pc_id = sa.Column(Text(36),
                       default=lambda: str(uuid.uuid4()),
-                      primary_key=True,
-                      autoincrement=False)
-    pc_serial = sa.Column(String)
-    pc_mac = sa.Column(String)
-    pc_ip = sa.Column(String)
+                      primary_key=True, nullable=False)
+    pc_serial = sa.Column(String, nullable=False)
+    pc_mac = sa.Column(String, nullable=False)
+    pc_ip = sa.Column(String, nullable=False)
     personal = relationship("Personal", back_populates="pc")
 
 
@@ -40,16 +51,15 @@ class Personal(Base):
     __tablename__ = "personal"
     user_id = sa.Column(Text(36),
                         default=lambda: str(uuid.uuid4()),
-                        primary_key=True,
-                        autoincrement=False)
-    first_name = sa.Column(String)
-    last_name = sa.Column(String)
-    birth_date = sa.Column(Date)
-    login = sa.Column(String)
-    email = sa.Column(String)
-    department_id = sa.Column(ForeignKey("departments.id"))
+                        primary_key=True, nullable=False)
+    first_name = sa.Column(String, nullable=False)
+    last_name = sa.Column(String, nullable=False)
+    birth_date = sa.Column(Date, nullable=False)
+    login = sa.Column(String, nullable=False)
+    email = sa.Column(String, nullable=False)
+    department_id = sa.Column(ForeignKey("departments.id"), nullable=False)
     department = relationship("Departments", back_populates="personal")
-    pc_id = sa.Column(ForeignKey("pc.pc_id"))
+    pc_id = sa.Column(ForeignKey("pc.pc_id"), nullable=False)
     pc = relationship("Pc", back_populates="personal")
     contract = relationship("Сontracts", back_populates="personal")
     login_dates = relationship(List["Login_dates"], back_populates="personal")
@@ -58,40 +68,40 @@ class Personal(Base):
 
 class Login_dates(Base):
     __tablename__ = "login_dates"
-    login_dates_id = sa.Column(Integer, primary_key=True, autoincrement=True)
+    login_dates_id = sa.Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     user_id = sa.Column(Text(36),
                         ForeignKey("personal.user_id"),
-                        default=lambda: str(uuid.uuid4()))
+                        default=lambda: str(uuid.uuid4()), nullable=False)
     pc_id = sa.Column(Text(36),
                       ForeignKey("pc.pc_id"),
-                      default=lambda: str(uuid.uuid4()))
-    date_time = sa.Column(DateTime)
+                      default=lambda: str(uuid.uuid4()), nullable=False)
+    date_time = sa.Column(DateTime, nullable=False)
     sa.UniqueConstraint(user_id, pc_id, date_time)
 
 
 class Сontracts(Base):
     __tablename__ = "contracts"
-    contracts_id = sa.Column(Integer, primary_key=True, autoincrement=True)
+    contracts_id = sa.Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     user_id = sa.Column(Text(36),
                         ForeignKey("personal.user_id"),
-                        default=lambda: str(uuid.uuid4()), unique=True)
-    date_from = sa.Column(Date)
-    date_to = sa.Column(Date)
+                        default=lambda: str(uuid.uuid4()), unique=True, nullable=False)
+    date_from = sa.Column(Date, nullable=False)
+    date_to = sa.Column(Date, nullable=False)
 
 
 class Salary(Base):
     __tablename__ = "salary"
-    salary_id = sa.Column(Integer, primary_key=True, autoincrement=True)
+    salary_id = sa.Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     user_id = sa.Column(Text(36),
                         ForeignKey("personal.user_id"),
-                        default=lambda: str(uuid.uuid4()))
-    month = sa.Column(Integer)
-    year = sa.Column(Integer)
-    salary = sa.Column(Integer)
+                        default=lambda: str(uuid.uuid4()), nullable=False)
+    month = sa.Column(Integer, nullable=False)
+    year = sa.Column(Integer, nullable=False)
+    salary = sa.Column(Integer, nullable=False)
     sa.UniqueConstraint(user_id, month, year, salary)
 
 
-engine = create_engine(Database_con)
+# engine = create_engine(Database_con)
 
 personalList = pd.read_excel(r'data.xlsx', sheet_name='personal')
 departmentsList = pd.read_excel(r'data.xlsx', sheet_name='departments')
