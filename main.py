@@ -20,14 +20,16 @@ Base = declarative_base()
 # Database_con = f'mssql://@{Server}/{Database}?driver={Driver}'
 
 # server='WIN-NLAMS2TV4QH'
-server = 'HOME-PC\SQLEXPRESS'
-database='our_organization'
-username='sa'
-password='Qq12345678'
+# server = ''
+# database='our_organization'
+# username='sa'
+# password='Qq12345678'
 
-conn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password
-cnxn = pyodbc.connect(conn_str)
-engine = create_engine("mssql+pyodbc:///?odbc_connect={}".format(conn_str))
+# conn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' \
+#            + server + ';DATABASE=' \
+#            + database + ';UID=' + username \
+#            + ';PWD=' + password
+
 
 class Departments(Base):
     __tablename__ = "departments"
@@ -213,12 +215,26 @@ def create_login_dates():
 
 
 if __name__ == '__main__':
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine, checkfirst=True)
-    create_departments()
-    create_pc()
-    create_personal()
-    create_contracts()
-    create_salary()
-    create_login_dates()
-    input()
+    try:
+        print("Введите название сервера:")
+        server = input()
+        print("Введите имя пользователя:")
+        username = input()
+        print("Введите пароль:")
+        password = input()
+        database = 'our_organization'
+        conn_str = 'DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password
+        cnxn = pyodbc.connect(conn_str)
+        engine = create_engine("mssql+pyodbc:///?odbc_connect={}".format(conn_str))
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+        create_departments()
+        create_pc()
+        create_personal()
+        create_contracts()
+        create_salary()
+        create_login_dates()
+        print("Нажмите Enter для завершения")
+        input()
+    except pyodbc.OperationalError:
+        print("Ошибка при подключении к базе данных")
